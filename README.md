@@ -1,5 +1,7 @@
 # kcapp-venue-screen
 
+NB: This is in early beta/testing. Issues and PR's are welcome
+
 A remote venue screen for displaying live darts match scoring in real time. Designed to run on a display at a venue, this application connects to kcapp's backend to show live game state as matches are played remotely or locally.
 
 ## Features
