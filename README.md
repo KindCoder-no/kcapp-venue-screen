@@ -114,6 +114,26 @@ docker compose up -d
 
 For full deployment instructions, see [DEPLOYMENT.md](DEPLOYMENT.md).
 
+## Release Process
+
+All development happens on the `develop` branch. When a new version is ready:
+
+1. **Bump the version** in `package.json` on `develop`:
+   ```bash
+   # e.g. for v1.0.1
+   npm version patch --no-git-tag-version   # patch: 1.0.0 → 1.0.1
+   npm version minor --no-git-tag-version   # minor: 1.0.0 → 1.1.0
+   npm version major --no-git-tag-version   # major: 1.0.0 → 2.0.0
+   ```
+
+2. **Open a PR** from `develop` → `main` and merge it.
+
+3. The [Release workflow](.github/workflows/docker.yml) automatically:
+   - Creates a GitHub Release tagged `vX.Y.Z` with auto-generated release notes
+   - Builds and pushes the Docker image tagged `vX.Y.Z` and `latest`
+
+> If you merge to `main` without bumping the version, the workflow detects the tag already exists and skips the release and Docker build.
+
 ## Environment Variables
 
 | Variable | Default | Description |
