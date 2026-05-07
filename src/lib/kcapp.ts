@@ -35,12 +35,15 @@ const defaultHost =
     ? `${window.location.protocol}//${window.location.hostname}`
     : 'http://localhost';
 
-const defaultApiBase = `${defaultHost}:8001`;
+const defaultApiBase =
+  typeof window !== 'undefined' ? `${window.location.origin}/api` : `${defaultHost}:8001`;
 const defaultVenueListUrl =
   typeof window !== 'undefined' ? `${window.location.origin}/api/venue` : '/api/venue';
+const defaultSocketBase =
+  typeof window !== 'undefined' ? window.location.origin : defaultHost;
 
 const apiBaseUrl = normalizeBaseUrl(import.meta.env.VITE_KCAPP_API_BASE ?? defaultApiBase);
-const socketBaseUrl = normalizeBaseUrl(import.meta.env.VITE_KCAPP_SOCKET_URL ?? apiBaseUrl);
+const socketBaseUrl = normalizeBaseUrl(import.meta.env.VITE_KCAPP_SOCKET_URL ?? defaultSocketBase);
 const venueListUrl = import.meta.env.VITE_KCAPP_VENUE_LIST_URL ?? defaultVenueListUrl;
 const envBasicAuthUsername = import.meta.env.VITE_KCAPP_BASIC_AUTH_USERNAME;
 const envBasicAuthPassword = import.meta.env.VITE_KCAPP_BASIC_AUTH_PASSWORD;

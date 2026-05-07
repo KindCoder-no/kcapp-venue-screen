@@ -31,4 +31,9 @@ jobs:
             ${{ secrets.DOCKERHUB_USERNAME }}/kcapp-venue-screen:latest
             ${{ secrets.DOCKERHUB_USERNAME }}/kcapp-venue-screen:${{ github.sha }}
           build-args: |
+            VITE_KCAPP_API_BASE=${{ vars.VITE_KCAPP_API_BASE }}
+            VITE_KCAPP_SOCKET_URL=${{ vars.VITE_KCAPP_SOCKET_URL }}
+            VITE_KCAPP_VENUE_LIST_URL=${{ vars.VITE_KCAPP_VENUE_LIST_URL }}
+            VITE_KCAPP_BASIC_AUTH_USERNAME=${{ vars.VITE_KCAPP_BASIC_AUTH_USERNAME }}
+            VITE_KCAPP_BASIC_AUTH_PASSWORD=${{ vars.VITE_KCAPP_BASIC_AUTH_PASSWORD }}
             VITE_APP_BASE_PATH=${{ vars.VITE_APP_BASE_PATH }}
