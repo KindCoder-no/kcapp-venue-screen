@@ -6,6 +6,7 @@ interface ImportMetaEnv {
 	readonly VITE_KCAPP_VENUE_LIST_URL?: string;
 	readonly VITE_KCAPP_BASIC_AUTH_USERNAME?: string;
 	readonly VITE_KCAPP_BASIC_AUTH_PASSWORD?: string;
+	readonly VITE_APP_BASE_PATH?: string;
 }
 
 interface ImportMeta {
