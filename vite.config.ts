@@ -7,4 +7,13 @@ export default defineConfig({
   optimizeDeps: {
     exclude: ['lucide-react'],
   },
+  server: {
+    proxy: {
+      '/api': {
+        target: 'https://darts.sanden.cloud',
+        changeOrigin: true,
+        secure: true,
+      },
+    },
+  },
 });

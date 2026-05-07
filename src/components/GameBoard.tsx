@@ -33,8 +33,6 @@ export default function GameBoard({
   onNewGame,
   onBackToSetup,
 }: GameBoardProps) {
-  const startingScore = parseInt(gameType);
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-4 md:p-6">
       <div className="max-w-7xl mx-auto">
@@ -85,7 +83,6 @@ export default function GameBoard({
                 key={player.id}
                 player={player}
                 isActive={index === currentPlayerIndex && !isGameOver}
-                startingScore={startingScore}
               />
             ))}
           </div>

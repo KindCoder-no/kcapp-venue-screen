@@ -4,12 +4,10 @@ import { Player } from '../types/game';
 interface PlayerCardProps {
   player: Player;
   isActive: boolean;
-  startingScore: number;
 }
 
-export default function PlayerCard({ player, isActive, startingScore }: PlayerCardProps) {
+export default function PlayerCard({ player, isActive }: PlayerCardProps) {
   const dartsThrown = player.turns.reduce((acc, turn) => acc + turn.throws.length, 0);
-  const totalScored = startingScore - player.score;
 
   return (
     <div
