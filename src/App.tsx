@@ -1,9 +1,16 @@
 import { useState } from 'react';
+import VenueSetup from './components/VenueSetup';
 import GameSetup from './components/GameSetup';
 import GameBoard from './components/GameBoard';
 import { GameState, GameType, Player, DartThrow } from './types/game';
 
+interface VenueInfo {
+  id: string;
+  name: string;
+}
+
 function App() {
+  const [venue, setVenue] = useState<VenueInfo | null>(null);
   const [gameState, setGameState] = useState<GameState | null>(null);
 
   const startGame = (gameType: GameType, playerNames: string[]) => {
@@ -146,6 +153,14 @@ function App() {
   const backToSetup = () => {
     setGameState(null);
   };
+
+  if (!venue) {
+    return (
+      <VenueSetup
+        onVenueSelected={(id, name) => setVenue({ id, name })}
+      />
+    );
+  }
 
   if (!gameState) {
     return <GameSetup onStartGame={startGame} />;
