@@ -29,9 +29,16 @@ export default function VenueSetup({ onVenueSelected }: VenueSetupProps) {
       if (!selectedVenueId && availableVenues.length > 0) {
         setSelectedVenueId(availableVenues[0].id);
       }
-    } catch {
+    } catch (error) {
+      console.error('Venue load failed', {
+        error,
+        venueListUrl: kcappConfig.venueListUrl,
+        apiBaseUrl: kcappConfig.apiBaseUrl,
+      });
+
+      const details = error instanceof Error ? error.message : 'Unknown error';
       setVenues([]);
-      setError('Unable to load venues from /api/venue. Check API URL or basic auth.');
+      setError(`Unable to load venues from /api/venue. ${details}`);
     } finally {
       setLoadingVenues(false);
     }
@@ -47,8 +54,15 @@ export default function VenueSetup({ onVenueSelected }: VenueSetupProps) {
 
     try {
       await fetchVenuePlayers(selectedVenueId);
-    } catch {
-      setError('Unable to verify venue against kcapp API. Check venue ID and connection.');
+    } catch (error) {
+      console.error('Venue verification failed', {
+        error,
+        selectedVenueId,
+        apiBaseUrl: kcappConfig.apiBaseUrl,
+      });
+
+      const details = error instanceof Error ? error.message : 'Unknown error';
+      setError(`Unable to verify venue against kcapp API. ${details}`);
       setRegistering(false);
       return;
     }

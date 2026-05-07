@@ -128,6 +128,28 @@ const buildAuthHeaders = (credentials?: BasicAuthCredentials): HeadersInit => {
   return authHeader ? { Authorization: authHeader } : {};
 };
 
+const buildHttpError = async (response: Response, action: string): Promise<Error> => {
+  let bodyPreview = '';
+
+  try {
+    const body = await response.text();
+    bodyPreview = body.trim().slice(0, 300);
+  } catch {
+    bodyPreview = '';
+  }
+
+  const details = [
+    `${action} failed`,
+    `status=${response.status} ${response.statusText}`,
+    `url=${response.url}`,
+    bodyPreview ? `body=${bodyPreview}` : null,
+  ]
+    .filter(Boolean)
+    .join(' | ');
+
+  return new Error(details);
+};
+
 export const kcappConfig = {
   apiBaseUrl,
   socketBaseUrl,
@@ -182,7 +204,7 @@ export const fetchVenuePlayers = async (
   });
 
   if (!response.ok) {
-    throw new Error('Could not load venue players');
+    throw await buildHttpError(response, 'Could not load venue players');
   }
 
   const payload = (await response.json()) as unknown;
@@ -208,7 +230,7 @@ export const fetchVenues = async (
   });
 
   if (!response.ok) {
-    throw new Error('Could not load venues');
+    throw await buildHttpError(response, 'Could not load venues');
   }
 
   const payload = (await response.json()) as unknown;
@@ -241,7 +263,7 @@ export const fetchVenueMatches = async (
   });
 
   if (!response.ok) {
-    throw new Error('Could not load venue matches');
+    throw await buildHttpError(response, 'Could not load venue matches');
   }
 
   const payload = (await response.json()) as unknown;
