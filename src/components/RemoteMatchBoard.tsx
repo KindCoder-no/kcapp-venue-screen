@@ -5,13 +5,17 @@ import ScoreInput from './ScoreInput';
 import { DartThrow, MultiplierType } from '../types/game';
 import { CheckoutDart, fetchVenueMatches, VenueMatch } from '../lib/kcapp';
 import { getCheckoutSuggestions } from '../lib/checkoutSuggestions';
-import installedVersionFile from '../../version.txt?raw';
+import packageJson from '../../package.json';
 
 const REMOTE_VERSION_URL =
-  'https://raw.githubusercontent.com/KindCoder-no/kcapp-venue-screen/refs/heads/main/version.txt';
+  'https://api.github.com/repos/KindCoder-no/kcapp-venue-screen/releases/latest';
 const VERSION_CHECK_INTERVAL_MS = 60 * 60 * 1000;
 
-const installedVersion = installedVersionFile.trim();
+const installedVersion =
+  typeof packageJson.version === 'string' && packageJson.version.trim() !== ''
+    ? packageJson.version.trim()
+    : '0.0.0';
+const normalizeVersion = (value: string): string => value.trim().replace(/^v/i, '');
 
 const multiplierToNumber = (m: MultiplierType): number => {
   if (m === 'double') return 2;
@@ -91,7 +95,8 @@ export default function RemoteMatchBoard({
           throw new Error('Failed to fetch remote version');
         }
 
-        const remoteVersion = (await response.text()).trim();
+        const payload = (await response.json()) as { name?: unknown };
+        const remoteVersion = typeof payload.name === 'string' ? payload.name.trim() : '';
         if (isDisposed) {
           return;
         }
@@ -102,7 +107,11 @@ export default function RemoteMatchBoard({
           return;
         }
 
-        setVersionStatus(remoteVersion === installedVersion ? 'up-to-date' : 'update-available');
+        setVersionStatus(
+          normalizeVersion(remoteVersion) === normalizeVersion(installedVersion)
+            ? 'up-to-date'
+            : 'update-available',
+        );
       } catch {
         if (controller.signal.aborted || isDisposed) {
           return;
@@ -228,7 +237,7 @@ export default function RemoteMatchBoard({
               )}
               {versionStatus === 'update-available' && (
                 <p className="text-amber-300 text-sm mt-1">
-                  Update available: v{latestVersion} is newer than installed v{installedVersion}.
+                  Update available: {latestVersion} is newer than installed v{installedVersion}.
                 </p>
               )}
               {versionStatus === 'unavailable' && (
