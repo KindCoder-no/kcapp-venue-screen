@@ -51,6 +51,10 @@ export default function ScoreInput({
   };
 
   const handleSubmitTurn = useCallback(() => {
+    if (currentThrows.length < 3) {
+      return;
+    }
+
     const turnScore = currentThrows.reduce((acc, dart) => acc + dart.score, 0);
     if (turnScore === 180) {
       setShowCelebration(true);
@@ -106,14 +110,20 @@ export default function ScoreInput({
           setKeyboardInput('');
           setKeyboardMultiplier('single');
         } else if (currentThrows.length > 0) {
+          if (currentThrows.length < 3) {
+            handleMiss();
+            return;
+          }
           handleSubmitTurn();
         }
       } else if (e.key === 'Backspace') {
         e.preventDefault();
-        if (keyboardMultiplier !== 'single') {
+        if (keyboardInput.length > 0) {
+          setKeyboardInput(keyboardInput.slice(0, -1));
+        } else if (keyboardMultiplier !== 'single') {
           setKeyboardMultiplier('single');
         } else {
-          setKeyboardInput(keyboardInput.slice(0, -1));
+          onRemoveThrow();
         }
       } else if (e.key === 'Escape') {
         e.preventDefault();
@@ -250,7 +260,7 @@ export default function ScoreInput({
         </button>
         <button
           onClick={handleSubmitTurn}
-          disabled={currentThrows.length === 0}
+          disabled={currentThrows.length < 3}
           className="flex-1 bg-gradient-to-r from-emerald-500 to-teal-600 text-white py-3 px-4 rounded-lg font-semibold shadow-lg hover:shadow-emerald-500/30 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
         >
           <Check className="w-5 h-5" />
