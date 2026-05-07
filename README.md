@@ -12,6 +12,9 @@ A remote venue screen for displaying live darts match scoring in real time. Desi
 - **Vertical Player Layout** – Stacked player cards with active player highlighted
 - **Score Input** – Keyboard-based dart entry with visual feedback
 
+## Preview/screenshots
+
+
 ## System Architecture
 
 ### Components
