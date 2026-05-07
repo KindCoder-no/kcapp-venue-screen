@@ -9,6 +9,7 @@ import installedVersionFile from '../../version.txt?raw';
 
 const REMOTE_VERSION_URL =
   'https://raw.githubusercontent.com/KindCoder-no/kcapp-venue-screen/refs/heads/main/version.txt';
+const VERSION_CHECK_INTERVAL_MS = 60 * 60 * 1000;
 
 const installedVersion = installedVersionFile.trim();
 
@@ -75,9 +76,11 @@ export default function RemoteMatchBoard({
   }, [currentPlayer?.playerId]);
 
   useEffect(() => {
-    const controller = new AbortController();
+    let isDisposed = false;
 
     const checkVersion = async () => {
+      const controller = new AbortController();
+
       try {
         const response = await fetch(REMOTE_VERSION_URL, {
           cache: 'no-store',
@@ -89,6 +92,9 @@ export default function RemoteMatchBoard({
         }
 
         const remoteVersion = (await response.text()).trim();
+        if (isDisposed) {
+          return;
+        }
         setLatestVersion(remoteVersion || null);
 
         if (!remoteVersion) {
@@ -98,7 +104,7 @@ export default function RemoteMatchBoard({
 
         setVersionStatus(remoteVersion === installedVersion ? 'up-to-date' : 'update-available');
       } catch {
-        if (controller.signal.aborted) {
+        if (controller.signal.aborted || isDisposed) {
           return;
         }
         setLatestVersion(null);
@@ -107,9 +113,13 @@ export default function RemoteMatchBoard({
     };
 
     void checkVersion();
+    const intervalId = window.setInterval(() => {
+      void checkVersion();
+    }, VERSION_CHECK_INTERVAL_MS);
 
     return () => {
-      controller.abort();
+      isDisposed = true;
+      window.clearInterval(intervalId);
     };
   }, []);
 
