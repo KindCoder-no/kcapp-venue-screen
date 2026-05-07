@@ -5,6 +5,12 @@ import ScoreInput from './ScoreInput';
 import { DartThrow, MultiplierType } from '../types/game';
 import { CheckoutDart, fetchVenueMatches, VenueMatch } from '../lib/kcapp';
 import { getCheckoutSuggestions } from '../lib/checkoutSuggestions';
+import installedVersionFile from '../../version.txt?raw';
+
+const REMOTE_VERSION_URL =
+  'https://raw.githubusercontent.com/KindCoder-no/kcapp-venue-screen/refs/heads/main/version.txt';
+
+const installedVersion = installedVersionFile.trim();
 
 const multiplierToNumber = (m: MultiplierType): number => {
   if (m === 'double') return 2;
@@ -44,6 +50,8 @@ export default function RemoteMatchBoard({
   const [selectedLegId, setSelectedLegId] = useState('');
   const [isLoadingMatches, setIsLoadingMatches] = useState(false);
   const [manualPickerError, setManualPickerError] = useState<string | null>(null);
+  const [latestVersion, setLatestVersion] = useState<string | null>(null);
+  const [versionStatus, setVersionStatus] = useState<'checking' | 'up-to-date' | 'update-available' | 'unavailable'>('checking');
 
   const currentPlayer = scoreState?.players.find((p) => p.isCurrentPlayer);
 
@@ -65,6 +73,45 @@ export default function RemoteMatchBoard({
   useEffect(() => {
     setCurrentThrows([]);
   }, [currentPlayer?.playerId]);
+
+  useEffect(() => {
+    const controller = new AbortController();
+
+    const checkVersion = async () => {
+      try {
+        const response = await fetch(REMOTE_VERSION_URL, {
+          cache: 'no-store',
+          signal: controller.signal,
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to fetch remote version');
+        }
+
+        const remoteVersion = (await response.text()).trim();
+        setLatestVersion(remoteVersion || null);
+
+        if (!remoteVersion) {
+          setVersionStatus('unavailable');
+          return;
+        }
+
+        setVersionStatus(remoteVersion === installedVersion ? 'up-to-date' : 'update-available');
+      } catch {
+        if (controller.signal.aborted) {
+          return;
+        }
+        setLatestVersion(null);
+        setVersionStatus('unavailable');
+      }
+    };
+
+    void checkVersion();
+
+    return () => {
+      controller.abort();
+    };
+  }, []);
 
   const handleAddThrow = (dart: DartThrow) => {
     if (currentThrows.length < 3) {
@@ -158,6 +205,26 @@ export default function RemoteMatchBoard({
             <p className="text-slate-300">
               This screen will switch to live scoring when a match is started remotely.
             </p>
+
+            <div className="mt-4 mx-auto max-w-lg rounded-xl border border-slate-600/50 bg-slate-900/60 px-4 py-3 text-left">
+              <p className="text-slate-300 text-sm">
+                Installed version: <span className="font-semibold text-white">v{installedVersion}</span>
+              </p>
+              {versionStatus === 'checking' && (
+                <p className="text-slate-400 text-sm mt-1">Checking for updates...</p>
+              )}
+              {versionStatus === 'up-to-date' && (
+                <p className="text-emerald-300 text-sm mt-1">You are running the latest version.</p>
+              )}
+              {versionStatus === 'update-available' && (
+                <p className="text-amber-300 text-sm mt-1">
+                  Update available: v{latestVersion} is newer than installed v{installedVersion}.
+                </p>
+              )}
+              {versionStatus === 'unavailable' && (
+                <p className="text-slate-400 text-sm mt-1">Could not check latest version right now.</p>
+              )}
+            </div>
 
             {!isManualPickerOpen && (
               <button
