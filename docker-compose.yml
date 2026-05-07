@@ -2,9 +2,8 @@ version: '3.8'
 
 services:
   kcapp-venue-screen:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    image: emresanden/kcapp-venue-screen:latest
+    container_name: kcapp-venue-screen
     ports:
       - "3000:3000"
     restart: unless-stopped

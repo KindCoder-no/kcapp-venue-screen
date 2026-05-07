@@ -97,6 +97,16 @@ npm run lint       # Run ESLint
 npm run typecheck  # Run TypeScript type checking
 ```
 
+## Deployment
+
+Use Docker Compose for the fastest start:
+
+```bash
+docker compose up -d
+```
+
+For full deployment instructions, see [DEPLOYMENT.md](DEPLOYMENT.md).
+
 ## Environment Variables
 
 | Variable | Default | Description |
