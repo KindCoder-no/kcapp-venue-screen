@@ -30,6 +30,15 @@ export interface BasicAuthCredentials {
 
 const normalizeBaseUrl = (value: string) => value.replace(/\/$/, '');
 
+const envOrFallback = (value: string | undefined, fallback: string): string => {
+  if (typeof value !== 'string') {
+    return fallback;
+  }
+
+  const trimmed = value.trim();
+  return trimmed === '' ? fallback : trimmed;
+};
+
 const defaultHost =
   typeof window !== 'undefined'
     ? `${window.location.protocol}//${window.location.hostname}`
@@ -42,9 +51,9 @@ const defaultVenueListUrl =
 const defaultSocketBase =
   typeof window !== 'undefined' ? window.location.origin : defaultHost;
 
-const apiBaseUrl = normalizeBaseUrl(import.meta.env.VITE_KCAPP_API_BASE ?? defaultApiBase);
-const socketBaseUrl = normalizeBaseUrl(import.meta.env.VITE_KCAPP_SOCKET_URL ?? defaultSocketBase);
-const venueListUrl = import.meta.env.VITE_KCAPP_VENUE_LIST_URL ?? defaultVenueListUrl;
+const apiBaseUrl = normalizeBaseUrl(envOrFallback(import.meta.env.VITE_KCAPP_API_BASE, defaultApiBase));
+const socketBaseUrl = normalizeBaseUrl(envOrFallback(import.meta.env.VITE_KCAPP_SOCKET_URL, defaultSocketBase));
+const venueListUrl = envOrFallback(import.meta.env.VITE_KCAPP_VENUE_LIST_URL, defaultVenueListUrl);
 const envBasicAuthUsername = import.meta.env.VITE_KCAPP_BASIC_AUTH_USERNAME;
 const envBasicAuthPassword = import.meta.env.VITE_KCAPP_BASIC_AUTH_PASSWORD;
 
