@@ -14,6 +14,10 @@ RUN npm install -g serve
 # Copy source code
 COPY . .
 
+# Build-time variables used by Vite
+ARG VITE_APP_BASE_PATH
+ENV VITE_APP_BASE_PATH=$VITE_APP_BASE_PATH
+
 # Build the app
 RUN npm run build
 

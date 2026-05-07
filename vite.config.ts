@@ -3,7 +3,7 @@ import react from '@vitejs/plugin-react';
 
 const normalizeBasePath = (value?: string): string => {
   if (!value || value.trim() === '') {
-    return '/';
+    return './';
   }
 
   const withLeadingSlash = value.startsWith('/') ? value : `/${value}`;
