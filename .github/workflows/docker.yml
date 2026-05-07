@@ -1,26 +1,55 @@
-name: Build and Publish Docker Image to DockerHub
+name: Release
 
 on:
   push:
     branches: ["main"]
 
 jobs:
-  build:
+  release:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get version from package.json
+        id: version
+        run: echo "version=$(node -p "require('./package.json').version")" >> $GITHUB_OUTPUT
+
+      - name: Check if release tag already exists
+        id: check
+        run: |
+          if git tag | grep -q "^v${{ steps.version.outputs.version }}$"; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create GitHub Release
+        if: steps.check.outputs.exists == 'false'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ steps.version.outputs.version }}
+          name: v${{ steps.version.outputs.version }}
+          generate_release_notes: true
+          make_latest: true
 
       - name: Set up Docker Buildx
+        if: steps.check.outputs.exists == 'false'
         uses: docker/setup-buildx-action@v3
 
       - name: DockerHub Login
+        if: steps.check.outputs.exists == 'false'
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_PASSWORD }}
 
       - name: Build and Push Docker image
+        if: steps.check.outputs.exists == 'false'
         uses: docker/build-push-action@v6
         with:
           context: .
@@ -29,7 +58,7 @@ jobs:
           pull: true
           tags: |
             ${{ secrets.DOCKERHUB_USERNAME }}/kcapp-venue-screen:latest
-            ${{ secrets.DOCKERHUB_USERNAME }}/kcapp-venue-screen:${{ github.sha }}
+            ${{ secrets.DOCKERHUB_USERNAME }}/kcapp-venue-screen:v${{ steps.version.outputs.version }}
           build-args: |
             VITE_KCAPP_API_BASE=${{ vars.VITE_KCAPP_API_BASE }}
             VITE_KCAPP_SOCKET_URL=${{ vars.VITE_KCAPP_SOCKET_URL }}
