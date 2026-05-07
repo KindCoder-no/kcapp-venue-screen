@@ -13,8 +13,10 @@ A remote venue screen for displaying live darts match scoring in real time. Desi
 - **Score Input** – Keyboard-based dart entry with visual feedback
 
 ## Preview/screenshots
-
-
+![Screenshot 1](screenshots/screenshot-1.png)
+![Screenshot 2](screenshots/screenshot-2.png)
+![Screenshot 3](screenshots/screenshot-3.png)
+![Screenshot 4](screenshots/screenshot-4.png)
 ## System Architecture
 
 ### Components
