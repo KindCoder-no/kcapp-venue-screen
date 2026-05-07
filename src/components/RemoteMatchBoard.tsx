@@ -137,9 +137,17 @@ export default function RemoteMatchBoard({
             )}
 
             {scoreState.isMatchFinished && (
-              <section className="bg-orange-500/10 border border-orange-500/50 rounded-xl p-4 flex items-center gap-3 text-orange-300">
-                <Trophy className="w-5 h-5" />
-                <span>This match is finished. Waiting for a new remote match.</span>
+              <section className="bg-amber-500/15 border border-amber-400/60 rounded-2xl p-6 text-amber-100">
+                <div className="flex items-center gap-3 mb-2">
+                  <Trophy className="w-7 h-7 text-amber-300 animate-pulse" />
+                  <p className="text-2xl font-bold tracking-wide">Match finished!</p>
+                </div>
+                {/*<p className="text-xl font-semibold">
+                  {scoreState.winnerName ? `${scoreState.winnerName} won the match!` : 'Match finished!'}
+                </p>*/}
+                <p className="text-sm text-amber-200/90 mt-2">
+                  Returning to waiting mode in 30 seconds.
+                </p>
               </section>
             )}
 

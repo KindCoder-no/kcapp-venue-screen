@@ -13,6 +13,7 @@ export interface RemotePlayer {
 export interface RemoteScoreState {
   legId: string;
   matchId: string | null;
+  winnerName: string | null;
   players: RemotePlayer[];
   isLegFinished: boolean;
   isMatchFinished: boolean;

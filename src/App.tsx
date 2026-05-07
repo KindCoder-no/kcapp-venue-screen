@@ -71,6 +71,37 @@ const parsePlayers = (payload: unknown): RemotePlayer[] => {
   });
 };
 
+const readWinnerName = (event: KcappScoreEvent, players: RemotePlayer[]): string | null => {
+  const match = (event.match ?? {}) as RawRecord;
+  const winner = (match.winner ?? {}) as RawRecord;
+
+  const explicitWinnerName =
+    readString(match.winner_name) ??
+    readString(match.winnerName) ??
+    readString(winner.name) ??
+    readString(winner.display_name) ??
+    readString(winner.player_name);
+
+  if (explicitWinnerName) {
+    return explicitWinnerName;
+  }
+
+  const winnerId =
+    readString(match.winner_id) ??
+    readString(match.winnerId) ??
+    readString(winner.player_id) ??
+    readString(winner.id);
+
+  if (winnerId) {
+    const matchingPlayer = players.find((player) => player.playerId === winnerId);
+    if (matchingPlayer) {
+      return matchingPlayer.name;
+    }
+  }
+
+  return players.find((player) => player.score === 0)?.name ?? null;
+};
+
 const parseScoreState = (payload: unknown, fallbackLegId: string): RemoteScoreState | null => {
   if (!payload || typeof payload !== 'object') {
     return null;
@@ -82,10 +113,12 @@ const parseScoreState = (payload: unknown, fallbackLegId: string): RemoteScoreSt
   const legId = readString(leg.id) ?? fallbackLegId;
   const matchId = readString(match.id);
   const players = parsePlayers(event.players);
+  const winnerName = readWinnerName(event, players);
 
   return {
     legId,
     matchId,
+    winnerName,
     players,
     isLegFinished: readBoolean(leg.is_finished),
     isMatchFinished: readBoolean(match.is_finished),
@@ -134,6 +167,14 @@ function App() {
 
   const venueSocketRef = useRef<Socket | null>(null);
   const legSocketRef = useRef<Socket | null>(null);
+  const matchResetTimerRef = useRef<number | null>(null);
+
+  const clearMatchResetTimer = () => {
+    if (matchResetTimerRef.current !== null) {
+      window.clearTimeout(matchResetTimerRef.current);
+      matchResetTimerRef.current = null;
+    }
+  };
 
   const disconnectLegSocket = () => {
     if (legSocketRef.current) {
@@ -213,6 +254,8 @@ function App() {
     });
 
     const onRemoteMatch = (payload: unknown) => {
+      clearMatchResetTimer();
+      setScoreState(null);
       const legId = readLegIdFromEvent(payload);
       if (legId) {
         connectLegSocket(legId);
@@ -228,11 +271,31 @@ function App() {
     });
 
     return () => {
+      clearMatchResetTimer();
       socket.disconnect();
       venueSocketRef.current = null;
       disconnectLegSocket();
     };
   }, [venue]);
+
+  useEffect(() => {
+    if (!scoreState?.isMatchFinished) {
+      clearMatchResetTimer();
+      return;
+    }
+
+    if (matchResetTimerRef.current !== null) {
+      return;
+    }
+
+    setConnectionStatus('Match finished. Celebration ends in 30 seconds...');
+    matchResetTimerRef.current = window.setTimeout(() => {
+      matchResetTimerRef.current = null;
+      setScoreState(null);
+      disconnectLegSocket();
+      setConnectionStatus('Connected to venue. Waiting for remote match...');
+    }, 30000);
+  }, [scoreState?.isMatchFinished]);
 
   const submitThrow = (legId: string, playerId: string, darts: { value: number; multiplier: number }[]) => {
     const socket = legSocketRef.current;
