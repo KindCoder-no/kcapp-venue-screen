@@ -14,6 +14,15 @@ interface VenueRecord {
   display_name?: string;
 }
 
+interface VenueMatchRecord {
+  id?: string | number;
+  match_id?: string | number;
+  current_leg_id?: string | number;
+  leg_id?: string | number;
+  name?: string;
+  display_name?: string;
+}
+
 export interface BasicAuthCredentials {
   username: string;
   password: string;
@@ -74,6 +83,26 @@ const resolveVenueName = (venue: VenueRecord): string => {
 const resolveVenueId = (venue: VenueRecord): string => {
   const id = venue.id ?? venue.venue_id;
   return String(id ?? 'unknown');
+};
+
+const resolveMatchId = (match: VenueMatchRecord): string => {
+  const id = match.id ?? match.match_id;
+  return String(id ?? 'unknown');
+};
+
+const resolveLegId = (match: VenueMatchRecord): string => {
+  const legId = match.current_leg_id ?? match.leg_id;
+  return String(legId ?? '');
+};
+
+const resolveMatchName = (match: VenueMatchRecord): string => {
+  if (typeof match.display_name === 'string' && match.display_name.trim()) {
+    return match.display_name;
+  }
+  if (typeof match.name === 'string' && match.name.trim()) {
+    return match.name;
+  }
+  return `Match ${resolveMatchId(match)}`;
 };
 
 const toBasicAuthHeader = (credentials?: BasicAuthCredentials): string | undefined => {
@@ -192,4 +221,40 @@ export const fetchVenues = async (
       name: resolveVenueName(venue),
     };
   });
+};
+
+export interface VenueMatch {
+  matchId: string;
+  legId: string;
+  name: string;
+}
+
+export const fetchVenueMatches = async (
+  venueId: string,
+  credentials?: BasicAuthCredentials,
+): Promise<VenueMatch[]> => {
+  const response = await fetch(`${apiBaseUrl}/venue/${venueId}/matches`, {
+    headers: buildAuthHeaders(credentials),
+  });
+
+  if (!response.ok) {
+    throw new Error('Could not load venue matches');
+  }
+
+  const payload = (await response.json()) as unknown;
+
+  if (!Array.isArray(payload)) {
+    return [];
+  }
+
+  return payload
+    .map((entry) => {
+      const match = entry as VenueMatchRecord;
+      return {
+        matchId: resolveMatchId(match),
+        legId: resolveLegId(match),
+        name: resolveMatchName(match),
+      };
+    })
+    .filter((match) => match.legId !== '');
 };

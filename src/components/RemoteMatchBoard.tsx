@@ -3,7 +3,7 @@ import { Activity, Radio, Trophy } from 'lucide-react';
 import { RemoteScoreState, VenueInfo } from '../types/kcapp';
 import ScoreInput from './ScoreInput';
 import { DartThrow, MultiplierType } from '../types/game';
-import { CheckoutDart } from '../lib/kcapp';
+import { CheckoutDart, fetchVenueMatches, VenueMatch } from '../lib/kcapp';
 import { getCheckoutSuggestions } from '../lib/checkoutSuggestions';
 
 const multiplierToNumber = (m: MultiplierType): number => {
@@ -28,6 +28,7 @@ interface RemoteMatchBoardProps {
   scoreState: RemoteScoreState | null;
   connectionStatus: string;
   onSubmitThrow: (legId: string, playerId: string, darts: { value: number; multiplier: number }[]) => void;
+  onManualSelectLeg: (legId: string) => void;
 }
 
 export default function RemoteMatchBoard({
@@ -35,8 +36,14 @@ export default function RemoteMatchBoard({
   scoreState,
   connectionStatus,
   onSubmitThrow,
+  onManualSelectLeg,
 }: RemoteMatchBoardProps) {
   const [currentThrows, setCurrentThrows] = useState<DartThrow[]>([]);
+  const [isManualPickerOpen, setIsManualPickerOpen] = useState(false);
+  const [availableMatches, setAvailableMatches] = useState<VenueMatch[]>([]);
+  const [selectedLegId, setSelectedLegId] = useState('');
+  const [isLoadingMatches, setIsLoadingMatches] = useState(false);
+  const [manualPickerError, setManualPickerError] = useState<string | null>(null);
 
   const currentPlayer = scoreState?.players.find((p) => p.isCurrentPlayer);
 
@@ -89,6 +96,40 @@ export default function RemoteMatchBoard({
     setCurrentThrows([]);
   };
 
+  const loadVenueMatches = async () => {
+    setIsLoadingMatches(true);
+    setManualPickerError(null);
+
+    try {
+      const matches = await fetchVenueMatches(venue.id);
+      setAvailableMatches(matches);
+      setSelectedLegId(matches[0]?.legId ?? '');
+      if (matches.length === 0) {
+        setManualPickerError('No active venue matches found right now.');
+      }
+    } catch {
+      setAvailableMatches([]);
+      setSelectedLegId('');
+      setManualPickerError('Could not load matches. Check connection and try again.');
+    } finally {
+      setIsLoadingMatches(false);
+    }
+  };
+
+  const handleOpenManualPicker = () => {
+    setIsManualPickerOpen(true);
+    void loadVenueMatches();
+  };
+
+  const handleJoinSelectedLeg = () => {
+    if (!selectedLegId) {
+      return;
+    }
+
+    onManualSelectLeg(selectedLegId);
+    setIsManualPickerOpen(false);
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 p-4 md:p-6">
       <div className="max-w-6xl mx-auto space-y-6">
@@ -117,6 +158,69 @@ export default function RemoteMatchBoard({
             <p className="text-slate-300">
               This screen will switch to live scoring when a match is started remotely.
             </p>
+
+            {!isManualPickerOpen && (
+              <button
+                type="button"
+                onClick={handleOpenManualPicker}
+                className="mt-6 px-5 py-2.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-900 font-semibold transition-colors"
+              >
+                Select Match Manually
+              </button>
+            )}
+
+            {isManualPickerOpen && (
+              <div className="mt-6 max-w-xl mx-auto rounded-xl border border-slate-600/60 bg-slate-900/70 p-4 text-left space-y-3">
+                <p className="text-white font-semibold">Manual Match Recovery</p>
+                <p className="text-slate-400 text-sm">Choose a venue match to reconnect this screen.</p>
+
+                <select
+                  value={selectedLegId}
+                  onChange={(event) => setSelectedLegId(event.target.value)}
+                  disabled={isLoadingMatches || availableMatches.length === 0}
+                  className="w-full px-3 py-2 rounded-lg border border-slate-600 bg-slate-800 text-slate-100 disabled:opacity-60"
+                >
+                  {availableMatches.length === 0 && (
+                    <option value="">No matches available</option>
+                  )}
+                  {availableMatches.map((match) => (
+                    <option key={`${match.matchId}-${match.legId}`} value={match.legId}>
+                      {match.name} (match {match.matchId}, leg {match.legId})
+                    </option>
+                  ))}
+                </select>
+
+                {manualPickerError && (
+                  <p className="text-sm text-amber-300">{manualPickerError}</p>
+                )}
+
+                <div className="flex flex-wrap gap-2 justify-end">
+                  <button
+                    type="button"
+                    onClick={() => setIsManualPickerOpen(false)}
+                    className="px-3 py-2 rounded-lg border border-slate-600 text-slate-200 hover:bg-slate-800 transition-colors"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => void loadVenueMatches()}
+                    disabled={isLoadingMatches}
+                    className="px-3 py-2 rounded-lg border border-slate-600 text-slate-200 hover:bg-slate-800 transition-colors disabled:opacity-60"
+                  >
+                    {isLoadingMatches ? 'Loading...' : 'Refresh'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleJoinSelectedLeg}
+                    disabled={!selectedLegId || isLoadingMatches}
+                    className="px-4 py-2 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-900 font-semibold transition-colors disabled:opacity-60"
+                  >
+                    Join Selected Match
+                  </button>
+                </div>
+              </div>
+            )}
           </section>
         )}
 

@@ -326,6 +326,12 @@ function App() {
     setVenue(selectedVenue);
   };
 
+  const handleManualSelectLeg = (legId: string) => {
+    clearMatchResetTimer();
+    setScoreState(null);
+    connectLegSocket(legId);
+  };
+
   if (!venue) {
     return (
       <VenueSetup
@@ -340,6 +346,7 @@ function App() {
       scoreState={scoreState}
       connectionStatus={connectionStatus}
       onSubmitThrow={submitThrow}
+      onManualSelectLeg={handleManualSelectLeg}
     />
   );
 }
