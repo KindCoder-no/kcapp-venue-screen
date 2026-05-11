@@ -2,7 +2,7 @@
 
 NB: This is in early beta/testing. Issues and PR's are welcome
 
-A remote venue screen for displaying live darts match scoring in real time. Designed to run on a display at a venue, this application connects to kcapp's backend to show live game state as matches are played remotely or locally.
+A remote venue screen for displaying live darts match scoring in real time. Designed to run on a display at a venue, this application connects to [kcapp's](https://github.com/kcapp) backend to show live game state as matches are played remotely or locally.
 
 ## Features
 
@@ -19,6 +19,27 @@ A remote venue screen for displaying live darts match scoring in real time. Desi
 ![Screenshot 2](screenshots/screenshot-2.png)
 ![Screenshot 3](screenshots/screenshot-3.png)
 ![Screenshot 4](screenshots/screenshot-4.png)
+
+## Roadmap
+
+- Improve live connection resilience and automatic recovery after standby/network drop
+- Add optional "check for updates" action in UI with last-checked timestamp
+- Expand score entry UX with clearer keyboard hints and optional confirmation sounds
+- Add configurable match-finished screen timing and behavior per venue
+- Improve observability with lightweight client diagnostics/log export
+- Add automated end-to-end tests for match lifecycle and keyboard input flows
+- Autodarts integration
+- Optional: Voice calling of players and remaining score (Same as kcapp frontend today)
+
+## Contribution
+
+Issues and PRs are welcome in this repository.
+
+kcapp note:
+- This project depends on kcapp backend APIs and Socket.IO events.
+- Consider contributing upstream to kcapp as well: https://github.com/kcapp
+
+
 ## System Architecture
 
 ### Components
@@ -228,6 +249,8 @@ When match ends:
 - Auto-disconnects and returns to waiting screen
 
 ## Development Notes
+
+
 
 ### Keyboard Shortcuts (ScoreInput)
 
