@@ -22,14 +22,16 @@ A remote venue screen for displaying live darts match scoring in real time. Desi
 
 ## Roadmap
 
-- Improve live connection resilience and automatic recovery after standby/network drop
-- Add optional "check for updates" action in UI with last-checked timestamp
-- Expand score entry UX with clearer keyboard hints and optional confirmation sounds
-- Add configurable match-finished screen timing and behavior per venue
-- Improve observability with lightweight client diagnostics/log export
-- Add automated end-to-end tests for match lifecycle and keyboard input flows
-- Autodarts integration
-- Optional: Voice calling of players and remaining score (Same as kcapp frontend today)
+Status legend: `Done`, `Working on`, `Planned`, `Backlog`
+
+- `Planned` Improve live connection resilience and automatic recovery after standby/network drop
+- `Idea` Add optional "check for updates" action in UI with last-checked timestamp
+- `Planned` Expand score entry UX with clearer keyboard hints and optional confirmation sounds
+- `Planned` Add configurable match-finished screen timing and behavior per venue
+- `Planned` Improve observability with lightweight client diagnostics/log export
+- `Planned` Add automated end-to-end tests for match lifecycle and keyboard input flows
+- `Backlog` Autodarts integration
+- `Backlog` Optional: Voice calling of players and remaining score (same as kcapp frontend today)
 
 ## Contribution
 
