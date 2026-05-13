@@ -4,6 +4,7 @@ import VenueSetup from './components/VenueSetup';
 import RemoteMatchBoard from './components/RemoteMatchBoard';
 import { createLegSocket, createVenueSocket } from './lib/kcapp';
 import { RemotePlayer, RemoteScoreState, VenueInfo } from './types/kcapp';
+import { DartThrow } from './types/game';
 
 type RawRecord = Record<string, unknown>;
 
@@ -164,6 +165,7 @@ function App() {
   });
   const [scoreState, setScoreState] = useState<RemoteScoreState | null>(null);
   const [connectionStatus, setConnectionStatus] = useState('Not connected');
+  const [lastUndoDarts, setLastUndoDarts] = useState<DartThrow[]>([]);
 
   const venueSocketRef = useRef<Socket | null>(null);
   const legSocketRef = useRef<Socket | null>(null);
@@ -233,6 +235,54 @@ function App() {
         });
       }
       setConnectionStatus('Leg finished. Waiting for next leg...');
+    });
+
+    socket.on('undo_visit', (payload: unknown) => {
+      const state = parseScoreState(payload, legId);
+      if (state) {
+        setScoreState(state);
+      }
+      // Extract previous visit darts if available
+      const event = payload as Record<string, unknown>;
+      const visit = (event.visit ?? {}) as Record<string, unknown>;
+      if (visit && (visit.first_dart || visit.second_dart || visit.third_dart)) {
+        const darts: DartThrow[] = [];
+        if (visit.first_dart) {
+          const dart = visit.first_dart as Record<string, unknown>;
+          darts.push({
+            sector: Number(dart.sector ?? 0),
+            multiplier: String(dart.multiplier ?? 'single'),
+            score: Number(dart.score ?? 0),
+          });
+        }
+        if (visit.second_dart) {
+          const dart = visit.second_dart as Record<string, unknown>;
+          darts.push({
+            sector: Number(dart.sector ?? 0),
+            multiplier: String(dart.multiplier ?? 'single'),
+            score: Number(dart.score ?? 0),
+          });
+        }
+        if (visit.third_dart) {
+          const dart = visit.third_dart as Record<string, unknown>;
+          darts.push({
+            sector: Number(dart.sector ?? 0),
+            multiplier: String(dart.multiplier ?? 'single'),
+            score: Number(dart.score ?? 0),
+          });
+        }
+        if (darts.length > 0) {
+          setLastUndoDarts(darts);
+        }
+      }
+    });
+
+    socket.on('undo_leg', (payload: unknown) => {
+      const state = parseScoreState(payload, legId);
+      if (state) {
+        setScoreState(state);
+      }
+      setLastUndoDarts([]);
     });
 
     socket.on('disconnect', () => {
@@ -321,6 +371,22 @@ function App() {
     socket.emit('throw', JSON.stringify(payload));
   };
 
+  const undoVisit = () => {
+    const socket = legSocketRef.current;
+    if (!socket) {
+      return;
+    }
+    socket.emit('undo_visit', {});
+  };
+
+  const undoLeg = () => {
+    const socket = legSocketRef.current;
+    if (!socket) {
+      return;
+    }
+    socket.emit('undo_leg', {});
+  };
+
   const handleVenueSelected = (selectedVenue: VenueInfo) => {
     localStorage.setItem(VENUE_STORAGE_KEY, JSON.stringify(selectedVenue));
     setVenue(selectedVenue);
@@ -347,6 +413,9 @@ function App() {
       connectionStatus={connectionStatus}
       onSubmitThrow={submitThrow}
       onManualSelectLeg={handleManualSelectLeg}
+      onUndoVisit={undoVisit}
+      onUndoLeg={undoLeg}
+      lastUndoDarts={lastUndoDarts}
     />
   );
 }

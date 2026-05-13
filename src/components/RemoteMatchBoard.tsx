@@ -40,6 +40,9 @@ interface RemoteMatchBoardProps {
   connectionStatus: string;
   onSubmitThrow: (legId: string, playerId: string, darts: { value: number; multiplier: number }[]) => void;
   onManualSelectLeg: (legId: string) => void;
+  onUndoVisit: () => void;
+  onUndoLeg: () => void;
+  lastUndoDarts: DartThrow[];
 }
 
 export default function RemoteMatchBoard({
@@ -48,6 +51,9 @@ export default function RemoteMatchBoard({
   connectionStatus,
   onSubmitThrow,
   onManualSelectLeg,
+  onUndoVisit,
+  onUndoLeg,
+  lastUndoDarts,
 }: RemoteMatchBoardProps) {
   const [currentThrows, setCurrentThrows] = useState<DartThrow[]>([]);
   const [isManualPickerOpen, setIsManualPickerOpen] = useState(false);
@@ -78,6 +84,25 @@ export default function RemoteMatchBoard({
   useEffect(() => {
     setCurrentThrows([]);
   }, [currentPlayer?.playerId]);
+
+  // Handle Backspace for undo_visit
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Backspace' && currentThrows.length === 0) {
+        e.preventDefault();
+        handleUndoVisit();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [currentThrows.length, onUndoVisit, lastUndoDarts]);
+
+  // Restore darts when undo_visit response arrives with lastUndoDarts
+  useEffect(() => {
+    if (lastUndoDarts.length > 0) {
+      setCurrentThrows(lastUndoDarts);
+    }
+  }, [lastUndoDarts]);
 
   useEffect(() => {
     let isDisposed = false;
@@ -159,6 +184,15 @@ export default function RemoteMatchBoard({
     }));
 
     onSubmitThrow(scoreState.legId, currentPlayer.playerId, darts);
+    setCurrentThrows([]);
+  };
+
+  const handleUndoVisit = () => {
+    onUndoVisit();
+  };
+
+  const handleUndoLeg = () => {
+    onUndoLeg();
     setCurrentThrows([]);
   };
 
@@ -404,7 +438,8 @@ export default function RemoteMatchBoard({
               {/* Score input */}
               {!scoreState.isLegFinished && !scoreState.isMatchFinished && (
                 <div className="lg:col-span-1">
-                  <div className="sticky top-6">
+                  <div className="sticky top-6 space-y-3">
+                    
                     <ScoreInput
                       currentThrows={currentThrows}
                       onAddThrow={handleAddThrow}
